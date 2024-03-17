@@ -87,6 +87,8 @@ function printHistory(key, obj) {
     })
 
     delBtn.addEventListener("click", async (e) => {
+        li.remove();
+
         try {
             const response = await axios.delete(`https://database-d5bdc-default-rtdb.firebaseio.com/expenseDetails/${key}.json`);
 
