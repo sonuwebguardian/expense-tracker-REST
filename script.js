@@ -1,61 +1,45 @@
 document.addEventListener("DOMContentLoaded", async (e) => {
-  // how to check is user is logged in
-  checkTokenAndRedirect();
 
-  // logout button
-  document
-    .getElementById("logoutButton")
-    .addEventListener("click", function () {
-      // Remove the token from local storage
-      localStorage.removeItem("token");
-      // Redirect the user to the login page
-      window.location.href = "login.html";
-    });
+    checkToken();
 
-  //making http request to api endpoint
-  try {
-    const response = await axios.get(
-      "https://login-js-9cfab-default-rtdb.firebaseio.com//expenseDetails.json"
-    );
-    console.log(response);
-    // for crudcrud bcoz array of objects
-    // for (let i of response.data) {
-    //   printHistory(i);
-    // }
-    // for firebase bcoz object of objects
-    // If data exists, iterate over each expense entry
-    if (response.data) {
-      // If data exists, iterate over each expense entry
-      Object.entries(response.data).forEach(([key, value]) => {
-        printHistory(key, value); // Pass key and value to printHistory function
-      });
+    document.getElementById("logoutButton").addEventListener("click", function () {
+        localStorage.removeItem("token");
+        localStorage.removeItem("email");
+        window.location.href = "login.html"
+    })
+
+    try {
+        const response = await axios.get("https://database-d5bdc-default-rtdb.firebaseio.com/expenseDetails.json");
+
+        console.log(response);
+        if(response.data){
+            Object.entries(response.data).forEach(([key,value])=>{
+                printHistory(key,value);
+            })
+        }
+    } catch (error) {
+        console.log(error);
     }
-  } catch (err) {
-    console.log(err);
-  }
-});
+})
 
 async function onbuttonclick(e) {
-  //preventing the default behaviour of form submit
   e.preventDefault();
-  //getting all the values of form on submit
-  const amount = document.getElementById("amount").value;
-  const desc = document.getElementById("description").value;
-  const category = document.getElementById("category").value;
-  //console.log(amount,desc,category);
 
-  //creating a object of expense details
+  const amount = document.getElementById("amount").value;
+  const description = document.getElementById("description").value;
+  const category = document.getElementById("category").value;
+
   let expenseDetails = {
     amount: amount,
-    desc: desc,
+    description: description,
     category: category,
   };
+
   // console.log(expenseDetails);
 
   try {
-    //using axios for storing expense details to crudcrud endpoint
     const response = await axios.post(
-      "https://login-js-9cfab-default-rtdb.firebaseio.com//expenseDetails.json",
+      "https://database-d5bdc-default-rtdb.firebaseio.com/expenseDetails.json",
       expenseDetails
     );
 
@@ -63,75 +47,64 @@ async function onbuttonclick(e) {
     if (response.data) {
       printHistory(response.data.name, expenseDetails);
     }
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
   }
 }
 
 function printHistory(key, obj) {
-  //getting expense history list and creating a new list item child in it
-  const ul = document.getElementById("expense-list");
-  const li = document.createElement("li");
-  //modifying newly created list item
-  li.appendChild(
-    document.createTextNode(`${obj.amount} - ${obj.category} - ${obj.desc}`)
-  );
-  li.id = key;
-  li.className = "list-group-item";
-  //creating edit and delete button and adding them to list item
-  const delBtn = document.createElement("button");
-  delBtn.className = "btn btn-danger btn-sm float-right delete";
-  delBtn.appendChild(document.createTextNode("Delete"));
-  const editBtn = document.createElement("button");
-  editBtn.className = "btn btn-info btn-sm float-right edit";
-  editBtn.appendChild(document.createTextNode("Edit"));
-  li.appendChild(delBtn);
-  li.appendChild(editBtn);
+    const ul = document.getElementById("expense-list");
+    const li = document.createElement("li");
 
-  //when edit button is clicked
-  editBtn.addEventListener("click", async (e) => {
-    document.getElementById("amount").value = obj.amount;
-    document.getElementById("description").value = obj.desc;
-    document.getElementById("category").value = obj.category;
-    li.remove();
-    try {
-      const response = await axios.delete(
-        `https://login-js-9cfab-default-rtdb.firebaseio.com//expenseDetails/${key}.json`
-      );
-      // console.log(response.data);
-    } catch (err) {
-      console.log(err);
-    }
-  });
+    li.appendChild(
+        document.createTextNode(`${obj.amount} - ${obj.category} - ${obj.description}`)
+    );
+    li.id = key;
+    li.className = "list-group-item";
 
-  //when delete button is clicked
-  delBtn.addEventListener("click", async (e) => {
-    try {
-      console.log("key is", key);
-      const response = await axios.delete(
-        `https://login-js-9cfab-default-rtdb.firebaseio.com//expenseDetails/${key}.json`
-      );
-      console.log("Deleted");
-      li.remove();
-    } catch (err) {
-      console.log(err);
-    }
-  });
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn btn-danger btn-sm float-right delete";
+    delBtn.appendChild(document.createTextNode("Delete"));
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn btn-info btn-sm float-right edit";
+    editBtn.appendChild(document.createTextNode("Edit"));
+    li.appendChild(delBtn);
+    li.appendChild(editBtn);
 
-  ul.appendChild(li);
+    editBtn.addEventListener("click", async (e) => {
+        document.getElementById("amount").value = obj.amount;
+        document.getElementById("description").value = obj.description;
+        document.getElementById("category").value = obj.category;
+
+        li.remove();
+
+        try {
+            const response = await axios.delete(`https://database-d5bdc-default-rtdb.firebaseio.com/expenseDetails/${key}.json`);
+            console.log("Item edited", response.data);
+        } catch (error) {
+            console.log(error);
+        }
+    })
+
+    delBtn.addEventListener("click", async (e) => {
+        try {
+            const response = await axios.delete(`https://database-d5bdc-default-rtdb.firebaseio.com/expenseDetails/${key}.json`);
+
+            console.log("Item Deleted", response.data);
+        } catch (error) {
+            
+        }
+    });
+
+    ul.appendChild(li)
 }
 
-function checkTokenAndRedirect() {
-  const token = localStorage.getItem("token");
+function checkToken() {
+    const token = localStorage.getItem("token");
 
-  if (!token) {
-    // Token does not exist in local storage
-    // Redirect the user to the login page
-    window.location.href = "login.html";
-    return false;
-  }
-
-  // Token exists in local storage, continue with the application logic
-  // console.log("Token exists:", token);
-  return true;
+    if(!token){
+        window.location.href = "login.html"
+        return false;
+    }
+    return true;
 }
