@@ -61,7 +61,7 @@ async function onbuttonclick(e) {
 
     console.log(response);
     if (response.data) {
-      printHistory(expenseDetails);
+      printHistory(response.data.name, expenseDetails);
     }
   } catch (err) {
     console.log(err);
